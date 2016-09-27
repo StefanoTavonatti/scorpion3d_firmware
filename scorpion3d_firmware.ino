@@ -2,8 +2,11 @@
 const int TIMEOUT=50;
 const int EXTRUDER_MOTOR=9;
 const int X_MOTOR=22;
+const int X_DIR=23;
 const int Y_MOTOR=24;
+const int Y_DIR=25;
 const int Z_MOTOR=26;
+const int Z_DIR=27;
 const int TERMAL_SENSOR_PIN=A0;
 
 const String VOID_COMMAND="VOID";
