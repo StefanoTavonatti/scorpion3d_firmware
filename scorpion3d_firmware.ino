@@ -12,11 +12,12 @@ const int TERMAL_SENSOR_PIN=A0;
 const String VOID_COMMAND="VOID";
 
 bool isPrinting;
-String lastCommand[4];
+String lastCommand[6];
 bool newCommand=false;
 
 
 void parseCommand(String command);
+void printCommandToSerial(); //For debugging
 
 void setup() {
   // put your setup code here, to run once:
@@ -42,6 +43,8 @@ void loop() {
         String cmd=Serial.readString();
         newCommand=true;
         parseCommand(cmd);
+        printCommandToSerial();
+        //TODO clear old
     }
   }
   else{
@@ -51,6 +54,29 @@ void loop() {
 }
 
 void parseCommand(String command){
-  //String result[]= new String[3];
+ 
+  int lastCommandIndex = 0;
+  int lastSubstringIndex = 0;
+  
+  for(int i=0;i<command.length();i++){
+    if(command.charAt(i)==' '){
+      lastCommand[lastCommandIndex]=command.substring(lastSubstringIndex,i);
+      //Serial.println("partial:"+command.substring(lastSubstringIndex,i));
+      lastSubstringIndex = i+1;
+      lastCommandIndex++;
+    }
+  }
+
+  lastCommand[lastCommandIndex]=command.substring(lastSubstringIndex,command.length());
+}
+
+void printCommandToSerial(){
+  Serial.print(lastCommand[0]+" ");
+  Serial.print(lastCommand[1]+" ");
+  Serial.print(lastCommand[2]+" ");
+  Serial.print(lastCommand[3]+" ");
+  Serial.print(lastCommand[4]+" ");
+  Serial.println(lastCommand[5]+" ");
+  
 }
 
