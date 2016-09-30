@@ -12,7 +12,7 @@ const int TERMAL_SENSOR_PIN=A0;
 const String VOID_COMMAND="VOID";
 
 bool isPrinting;
-String lastCommand[6];
+String lastCommand[6];//Field are not reset every cycle
 bool newCommand=false;
 
 
