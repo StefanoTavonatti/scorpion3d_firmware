@@ -1,3 +1,15 @@
+// Pin that the thermistor is connected to
+#define PINOTERMISTOR A0
+// Nominal temperature value for the thermistor
+#define TERMISTORNOMINAL 100000
+// Nominl temperature depicted on the datasheet
+#define TEMPERATURENOMINAL 25
+// Number of samples 
+#define NUMAMOSTRAS 5
+// Beta value for our thermistor
+#define BCOEFFICIENT 3950
+// Value of the series resistor
+#define SERIESRESISTOR 100000
 
 const int TIMEOUT=50;
 const int EXTRUDER_MOTOR=9;
@@ -7,7 +19,6 @@ const int Y_MOTOR=24;
 const int Y_DIR=25;
 const int Z_MOTOR=26;
 const int Z_DIR=27;
-const int TERMAL_SENSOR_PIN=A0;
 
 const String VOID_COMMAND="VOID";
 
@@ -18,6 +29,8 @@ bool newCommand=false;
 
 void parseCommand(String command);
 void printCommandToSerial(); //For debugging
+
+float readTemperatureC();
 
 void setup() {
   // put your setup code here, to run once:
@@ -36,7 +49,7 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
-  
+  float temperature=readTemperatureC();
 
   if(!isPrinting){
     if(Serial.available()>0){
@@ -45,6 +58,11 @@ void loop() {
         parseCommand(cmd);
         printCommandToSerial();
         //TODO clear old
+
+        if(lastCommand[0]=="TEMP"){
+          Serial.print("TEMP ");
+          Serial.println(temperature);
+        }
     }
   }
   else{
@@ -53,6 +71,9 @@ void loop() {
 
 }
 
+/**
+ * Split command by spaces
+ */
 void parseCommand(String command){
  
   int lastCommandIndex = 0;
@@ -78,5 +99,39 @@ void printCommandToSerial(){
   Serial.print(lastCommand[4]+" ");
   Serial.println(lastCommand[5]+" ");
   
+}
+
+/**
+ * read the temperature from thermistor in the printing head
+ */
+float readTemperatureC(){
+  //read sensor 5 times then compute the average
+  float avg=0;
+  for (int i=0; i< NUMAMOSTRAS; i++) {
+    avg+= analogRead(PINOTERMISTOR);
+    delay(10);
+  }
+
+  avg/=NUMAMOSTRAS;
+
+  //Calculating thermistore resistance with Voltage partitor formula
+  float vin=5;
+  float vout=vin*avg/1023;
+  
+  
+  float alfa=vout/vin;
+  
+  float r1=(SERIESRESISTOR/alfa)-SERIESRESISTOR;
+  
+  //Calculate temperature using the Beta Factor equation
+  float temperatura;
+  temperatura = r1 / TERMISTORNOMINAL;     // (R/Ro)
+  temperatura = log(temperatura); // ln(R/Ro)
+  temperatura /= BCOEFFICIENT;                   // 1/B * ln(R/Ro)
+  temperatura += 1.0 / (TEMPERATURENOMINAL + 273.15); // + (1/To)
+  temperatura = 1.0 / temperatura;                 // Invert the value
+  temperatura -= 273.15;                         // Convert it to Celsius
+
+  return temperatura;
 }
 
